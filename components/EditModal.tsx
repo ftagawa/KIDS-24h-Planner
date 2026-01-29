@@ -191,7 +191,7 @@ export const EditModal: React.FC<EditModalProps> = ({
             {/* Icons */}
             <div>
               <label className="block text-sm font-bold text-gray-500 mb-2">アイコン</label>
-              <div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar">
+              <div className="flex gap-2 overflow-x-auto py-2 px-3" style={{ scrollbarWidth: 'thin' }}>
                 {PRESET_ICONS.map((i) => (
                   <button
                     key={i}
@@ -208,7 +208,7 @@ export const EditModal: React.FC<EditModalProps> = ({
             {/* Colors */}
             <div>
               <label className="block text-sm font-bold text-gray-500 mb-2">いろ</label>
-              <div className="flex gap-3 overflow-x-auto pb-2">
+              <div className="flex gap-3 overflow-x-auto py-2 px-3" style={{ scrollbarWidth: 'thin' }}>
                 {PRESET_COLORS.map((c) => (
                   <button
                     key={c}

@@ -34,7 +34,7 @@ export const ScheduleCircle: React.FC<ScheduleCircleProps> = ({
   }, []);
 
   const { width, height } = dimensions;
-  const radius = Math.min(width, height) / 2 - 40; // Padding for labels
+  const radius = Math.min(width, height) / 2 - 60; // Padding for labels and icons
   const innerRadius = 0; // Pie chart style
 
   // Memoize the drawing logic
@@ -126,7 +126,7 @@ export const ScheduleCircle: React.FC<ScheduleCircleProps> = ({
         onActivityClick(d as unknown as Activity);
       });
 
-    // Path
+    // Path (draw all paths first)
     arcs.append('path')
       .attr('d', (d) => {
         let sAngle = angleScale(d.start);
@@ -147,8 +147,11 @@ export const ScheduleCircle: React.FC<ScheduleCircleProps> = ({
       .attr('stroke', '#fff')
       .attr('stroke-width', 2);
 
-    // Labels/Icons in the middle of the arc
-    arcs.each(function (d) {
+    // Create a separate group for all labels/icons (drawn after all paths)
+    const labelGroup = g.append('g').attr('class', 'labels-layer');
+
+    // Labels/Icons in the middle of the arc (draw all icons on top)
+    mappedData.forEach((d) => {
       let sAngle = angleScale(d.start);
       let eAngle = angleScale(d.end);
       if (d.isWrap) {
@@ -161,26 +164,26 @@ export const ScheduleCircle: React.FC<ScheduleCircleProps> = ({
       const centroid = [Math.sin(midAngle) * midRadius, -Math.cos(midAngle) * midRadius];
 
       // Always show icons regardless of duration
-      const group = d3.select(this);
+      const textGroup = labelGroup.append('g')
+        .attr('class', 'activity-label')
+        .style('pointer-events', 'none');
 
       // Icon
-      group.append('text')
+      textGroup.append('text')
         .attr('transform', `translate(${centroid[0]}, ${centroid[1] - 8})`)
         .attr('text-anchor', 'middle')
         .text(d.icon)
-        .attr('font-size', '24px')
-        .style('pointer-events', 'none');
+        .attr('font-size', '24px');
 
       // Title (truncated)
-      group.append('text')
+      textGroup.append('text')
         .attr('transform', `translate(${centroid[0]}, ${centroid[1] + 12})`)
         .attr('text-anchor', 'middle')
         .text(d.title.length > 5 ? d.title.substring(0, 4) + '..' : d.title)
         .attr('font-size', '10px')
         .attr('fill', '#fff')
         .attr('font-weight', 'bold')
-        .style('text-shadow', '0px 1px 2px rgba(0,0,0,0.3)')
-        .style('pointer-events', 'none');
+        .style('text-shadow', '0px 1px 2px rgba(0,0,0,0.3)');
     });
 
     // --- CURRENT TIME INDICATOR (CLOCK HAND) ---
@@ -274,7 +277,7 @@ export const ScheduleCircle: React.FC<ScheduleCircleProps> = ({
         width={width}
         height={height}
         className="select-none touch-manipulation drop-shadow-xl"
-        style={{ maxWidth: '100%', height: 'auto' }}
+        style={{ maxWidth: '100%', height: 'auto', overflow: 'visible' }}
       />
     </div>
   );

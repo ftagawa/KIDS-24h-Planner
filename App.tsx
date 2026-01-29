@@ -14,21 +14,27 @@ const App: React.FC = () => {
 
   // Load from local storage
   useEffect(() => {
-    const saved = localStorage.getItem('kids-planner-activities');
+    const saved = localStorage.getItem('kids-planner-activities-v2');
     if (saved) {
       setActivities(JSON.parse(saved));
     } else {
       // Sample initial data
       setActivities([
-        { id: '1', title: 'ねる', startHour: 22, startMinute: 0, endHour: 7, endMinute: 0, color: '#3b82f6', icon: '😴' },
-        { id: '2', title: 'がっこう', startHour: 8, startMinute: 30, endHour: 15, endMinute: 0, color: '#facc15', icon: '🏫' },
+        { id: '1', title: '寝る', startHour: 21, startMinute: 30, endHour: 7, endMinute: 0, color: '#4ECDC4', icon: '😴' },
+        { id: '2', title: '朝ご飯', startHour: 7, startMinute: 0, endHour: 8, endMinute: 0, color: '#facc15', icon: '🍳' },
+        { id: '3', title: '保育園', startHour: 9, startMinute: 0, endHour: 18, endMinute: 0, color: '#F4D03F', icon: '🏫' },
+        { id: '4', title: '夜ご飯', startHour: 18, startMinute: 30, endHour: 19, endMinute: 30, color: '#E67E22', icon: '🍱' },
+        { id: '5', title: 'お風呂', startHour: 19, startMinute: 30, endHour: 20, endMinute: 30, color: '#3498DB', icon: '🛁' },
+        { id: '6', title: '自由時間', startHour: 20, startMinute: 30, endHour: 21, endMinute: 30, color: '#9B59B6', icon: '🎮' },
       ]);
     }
   }, []);
 
   // Save to local storage
   useEffect(() => {
-    localStorage.setItem('kids-planner-activities', JSON.stringify(activities));
+    if (activities.length > 0) {
+      localStorage.setItem('kids-planner-activities-v2', JSON.stringify(activities));
+    }
   }, [activities]);
 
   const handleTimeClick = (h: number, m: number) => {
