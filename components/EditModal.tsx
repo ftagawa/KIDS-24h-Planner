@@ -9,6 +9,7 @@ interface EditModalProps {
   onDelete: (id: string) => void;
   initialActivity?: Partial<Activity>;
   defaultStartTime?: { h: number; m: number };
+  otherActivities: Activity[];
 }
 
 export const EditModal: React.FC<EditModalProps> = ({
@@ -17,7 +18,8 @@ export const EditModal: React.FC<EditModalProps> = ({
   onSave,
   onDelete,
   initialActivity,
-  defaultStartTime
+  defaultStartTime,
+  otherActivities,
 }) => {
   const [title, setTitle] = useState('');
   const [start, setStart] = useState('08:00');
@@ -64,9 +66,59 @@ export const EditModal: React.FC<EditModalProps> = ({
 
   if (!isOpen) return null;
 
+  const getMinutes = (h: number, m: number) => h * 60 + m;
+
+  const checkOverlap = (newStartH: number, newStartM: number, newEndH: number, newEndM: number) => {
+    // Convert to linear minutes (0-1440)
+    // Handle wrap simply by checking 24h ranges if needed, but for now assuming most events are within day or wrap once.
+    // If wrap, we treat it as two segments or one long segment?
+    // Let's use simple minute comparison, handling wrap.
+
+    // Helper to check collision between two ranges [s1, e1] and [s2, e2] (exclusive end?)
+    // In this app, visually 9:00-10:00 and 10:00-11:00 are touching, which is fine.
+    // So overlap means (s1 < e2) && (s2 < e1).
+
+    // Complex part: wrapping (e.g. 23:00 - 02:00)
+    // Normalize to 0-1440. If wrapped, treat as two intervals: [start, 1440] and [0, end].
+
+    const getIntervals = (sH: number, sM: number, eH: number, eM: number) => {
+      const s = getMinutes(sH, sM);
+      const e = getMinutes(eH, eM);
+      if (e < s) {
+        return [[s, 1440], [0, e]];
+      }
+      return [[s, e]];
+    }
+
+    const newIntervals = getIntervals(newStartH, newStartM, newEndH, newEndM);
+
+    for (const act of otherActivities) {
+      // Skip self if id matches (should be handled by parent filtering passed prop, but good safety)
+      if (initialActivity?.id === act.id) continue;
+
+      const existingIntervals = getIntervals(act.startHour, act.startMinute, act.endHour, act.endMinute);
+
+      for (const newInt of newIntervals) {
+        for (const existInt of existingIntervals) {
+          // Check Overlap: (StartA < EndB) && (EndA > StartB)
+          if (newInt[0] < existInt[1] && newInt[1] > existInt[0]) {
+            return true;
+          }
+        }
+      }
+    }
+    return false;
+  };
+
   const handleSave = () => {
     const [startH, startM] = start.split(':').map(Number);
     const [endH, endM] = end.split(':').map(Number);
+
+    // Validate overlap
+    if (checkOverlap(startH, startM, endH, endM)) {
+      alert("ほかのよていとかさなっているよ！じかんをかえてね。");
+      return;
+    }
 
     onSave({
       id: initialActivity?.id || crypto.randomUUID(),
@@ -144,9 +196,8 @@ export const EditModal: React.FC<EditModalProps> = ({
                   <button
                     key={i}
                     onClick={() => setIcon(i)}
-                    className={`flex-shrink-0 w-12 h-12 text-2xl flex items-center justify-center rounded-xl border-2 transition-all ${
-                      icon === i ? 'border-blue-500 bg-blue-50 scale-110' : 'border-gray-100 hover:bg-gray-50'
-                    }`}
+                    className={`flex-shrink-0 w-12 h-12 text-2xl flex items-center justify-center rounded-xl border-2 transition-all ${icon === i ? 'border-blue-500 bg-blue-50 scale-110' : 'border-gray-100 hover:bg-gray-50'
+                      }`}
                   >
                     {i}
                   </button>
@@ -162,9 +213,8 @@ export const EditModal: React.FC<EditModalProps> = ({
                   <button
                     key={c}
                     onClick={() => setColor(c)}
-                    className={`flex-shrink-0 w-10 h-10 rounded-full border-4 transition-all ${
-                      color === c ? 'border-gray-300 scale-110 shadow-md' : 'border-transparent'
-                    }`}
+                    className={`flex-shrink-0 w-10 h-10 rounded-full border-4 transition-all ${color === c ? 'border-gray-300 scale-110 shadow-md' : 'border-transparent'
+                      }`}
                     style={{ backgroundColor: c }}
                   />
                 ))}
